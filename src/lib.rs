@@ -4,7 +4,7 @@
 #[macro_use]
 extern crate lazy_static;
 
-mod phonetic;
+pub mod phonetic;
 mod fixed;
 pub mod context;
 mod settings;

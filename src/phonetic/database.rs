@@ -36,7 +36,7 @@ lazy_static! {
     ];
 }
 
-pub(crate) struct Database {
+pub struct Database {
     regex: PhoneticRegex,
     table: FxHashMap<String, Vec<String>>,
     suffix: FxHashMap<String, String>,
@@ -44,7 +44,7 @@ pub(crate) struct Database {
 }
 
 impl Database {
-    pub(crate) fn new() -> Database {
+    pub fn new() -> Database {
         Database {
             regex: PhoneticRegex::new(),
             table: serde_json::from_str(include_str!("dictionary.json")).unwrap(),
@@ -54,7 +54,7 @@ impl Database {
     }
 
     /// Find words from the dictionary with given word.
-    pub(crate) fn search_dictionary(&self, word: &str) -> Vec<String> {
+    pub fn search_dictionary(&self, word: &str) -> Vec<String> {
         let rgx = Regex::new(&self.regex.parse(word)).unwrap();
 
         DICTIONARY_TABLE
