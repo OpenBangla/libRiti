@@ -1,12 +1,31 @@
-use maplit::hashmap;
+//use rayon::prelude::*;
+use hashbrown::HashMap;
+
 use regex::Regex;
 use rustc_hash::FxHashMap;
 use serde_json;
 
 use crate::phonetic::regex::PhoneticRegex;
 
+macro_rules! hashmap {
+    (@single $($x:tt)*) => (());
+    (@count $($rest:expr),*) => (<[()]>::len(&[$(hashmap!(@single $rest)),*]));
+
+    ($($key:expr => $value:expr,)+) => { hashmap!($($key => $value),+) };
+    ($($key:expr => $value:expr),*) => {
+        {
+            let _cap = hashmap!(@count $($key),*);
+            let mut _map = ::hashbrown::HashMap::with_capacity(_cap);
+            $(
+                let _ = _map.insert($key, $value);
+            )*
+            _map
+        }
+    };
+}
+
 lazy_static! {
-    static ref DICTIONARY_TABLE: std::collections::HashMap<&'static str, Vec<&'static str>> = hashmap! [
+    static ref DICTIONARY_TABLE: hashbrown::HashMap<&'static str, Vec<&'static str>> = hashmap! [
         "a" => vec!["a", "aa", "e", "oi", "o", "nya", "y"],
         "b" => vec!["b", "bh"],
         "c" => vec!["c", "ch", "k"],
@@ -38,7 +57,7 @@ lazy_static! {
 
 pub struct Database {
     regex: PhoneticRegex,
-    table: FxHashMap<String, Vec<String>>,
+    table: HashMap<String, Vec<String>>,
     suffix: FxHashMap<String, String>,
     autocorrect: FxHashMap<String, String>,
 }
@@ -56,6 +75,7 @@ impl Database {
     /// Find words from the dictionary with given word.
     pub fn search_dictionary(&self, word: &str) -> Vec<String> {
         let rgx = Regex::new(&self.regex.parse(word)).unwrap();
+        //let mut res: Vec<String> = Vec::new();
 
         DICTIONARY_TABLE
             .get(&word[0..1])
@@ -70,7 +90,18 @@ impl Database {
                     }
                 })
             })
-            .collect()
+            .collect() /*
+        for item in DICTIONARY_TABLE.get(&word[0..1]).unwrap().iter() {
+            let mut s = self.table[&item.to_string()].par_iter().filter_map(|i| {
+                    if rgx.is_match(i) {
+                        Some(i.to_owned())
+                    } else {
+                        None
+                    }
+                }).collect();
+            res.append(&mut s);
+        }
+        res*/
     }
 
     pub(crate) fn find_suffix(&self, string: &str) -> Option<String> {

@@ -13,3 +13,5 @@ lazy_static = "1.0"
 edit-distance = "2.0"
 rupantor = "0.2"
 maplit = "1.0"
+rayon = "1.0"
+hashbrown = { version = "0.4", features = ["rayon", "serde"] }
