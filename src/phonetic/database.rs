@@ -1,5 +1,5 @@
-//use rayon::prelude::*;
 use hashbrown::HashMap;
+use rayon::prelude::*;
 
 use regex::Regex;
 use rustc_hash::FxHashMap;
@@ -75,14 +75,13 @@ impl Database {
     /// Find words from the dictionary with given word.
     pub fn search_dictionary(&self, word: &str) -> Vec<String> {
         let rgx = Regex::new(&self.regex.parse(word)).unwrap();
-        //let mut res: Vec<String> = Vec::new();
 
         DICTIONARY_TABLE
             .get(&word[0..1])
             .unwrap_or(&Vec::new())
-            .iter()
+            .par_iter()
             .flat_map(|&item| {
-                self.table[item].iter().filter_map(|i| {
+                self.table[item].par_iter().filter_map(|i| {
                     if rgx.is_match(i) {
                         Some(i.to_owned())
                     } else {
@@ -90,18 +89,7 @@ impl Database {
                     }
                 })
             })
-            .collect() /*
-        for item in DICTIONARY_TABLE.get(&word[0..1]).unwrap().iter() {
-            let mut s = self.table[&item.to_string()].par_iter().filter_map(|i| {
-                    if rgx.is_match(i) {
-                        Some(i.to_owned())
-                    } else {
-                        None
-                    }
-                }).collect();
-            res.append(&mut s);
-        }
-        res*/
+            .collect()
     }
 
     pub(crate) fn find_suffix(&self, string: &str) -> Option<String> {
